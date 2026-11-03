@@ -22,9 +22,9 @@ jobs:
       - name: Install validators
         run: |
           npm install --no-save --no-package-lock ajv@8
-          pip install skills-ref
+          pip install skills-ref==0.1.1
       - name: Validate manifests, Skills, links and content
         run: node .github/scripts/validate.mjs
       - name: Validate Skills with the Agent Skills reference validator
         run: |
-          for d in skills/*/; do skills-ref validate "$d"; done
+          for d in skills/*/; do agentskills validate "$d"; done
