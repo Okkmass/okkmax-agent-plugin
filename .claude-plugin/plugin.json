@@ -1,0 +1,32 @@
+{
+  "name": "okkmax",
+  "version": "1.0.0",
+  "description": "Read-only OkkMax data on AI API relay stations: purity, uptime, latency and price per model.",
+  "author": {
+    "name": "OkkMax",
+    "url": "https://www.okkmax.com"
+  },
+  "homepage": "https://www.okkmax.com/developers",
+  "repository": "https://github.com/Okkmass/okkmax-agent-plugin",
+  "license": "MIT",
+  "keywords": [
+    "relay",
+    "api-relay",
+    "llm",
+    "pricing",
+    "uptime",
+    "mcp"
+  ],
+  "mcpServers": {
+    "okkmax": {
+      "type": "http",
+      "url": "https://www.okkmax.com/mcp"
+    }
+  },
+  "displayName": "OkkMax",
+  "icon": "./assets/icon.png",
+  "documentationUrl": "https://www.okkmax.com/developers",
+  "supportUrl": "https://www.okkmax.com/support",
+  "privacyPolicyUrl": "https://www.okkmax.com/privacy",
+  "termsOfServiceUrl": "https://www.okkmax.com/terms"
+}

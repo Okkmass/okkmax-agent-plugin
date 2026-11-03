@@ -1,0 +1,30 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validators
+        run: |
+          npm install --no-save --no-package-lock ajv@8
+          pip install skills-ref
+      - name: Validate manifests, Skills, links and content
+        run: node .github/scripts/validate.mjs
+      - name: Validate Skills with the Agent Skills reference validator
+        run: |
+          for d in skills/*/; do skills-ref validate "$d"; done

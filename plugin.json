@@ -1,0 +1,115 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "okkmax",
+  "version": "1.0.0",
+  "description": "Read-only OkkMax data on AI API relay stations: purity, uptime, latency and price per model.",
+  "author": {
+    "name": "OkkMax",
+    "url": "https://www.okkmax.com"
+  },
+  "homepage": "https://www.okkmax.com/developers",
+  "repository": "https://github.com/Okkmass/okkmax-agent-plugin",
+  "license": "MIT",
+  "keywords": [
+    "relay",
+    "api-relay",
+    "llm",
+    "pricing",
+    "uptime",
+    "mcp"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "OkkMax",
+        "shortDescription": "Compare AI API relay stations",
+        "longDescription": "OkkMax continuously measures AI API relay stations (services that resell access to models such as Claude, GPT and Gemini). This plugin lets your assistant read that data instead of guessing.\n\nIt can find which relays offer a model, list the whole board for a model with price and 24h uptime, find the lowest-priced relay that meets an uptime threshold, and read one relay's purity, uptime, latency and price records, down to the group and model level. It can also explain how OkkMax measures things. Two bundled skills guide the assistant: okkmax-find-relay (choose a relay for a model) and okkmax-check-relay (check one named relay).\n\nLimits: everything is read-only and needs no account or API key. Results cover only the relays OkkMax currently tracks and has tested, and every figure comes with the time the data was last updated. A model or group that has not been tested is reported as not tested, which is never evidence that it is safe. A lowest price is the lowest among the candidates that match the stated filters, not a recommendation. OkkMax compares relays; it does not sell API access, take orders or handle your keys.",
+        "developerName": "OkkMax",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Search relay stations and models",
+          "Compare relay prices and uptime for a model",
+          "Read purity records by group and model",
+          "Explain OkkMax methodology"
+        ],
+        "websiteURL": "https://www.okkmax.com/developers",
+        "supportURL": "https://www.okkmax.com/support",
+        "privacyPolicyURL": "https://www.okkmax.com/privacy",
+        "termsOfServiceURL": "https://www.okkmax.com/terms",
+        "defaultPrompt": [
+          "Find the cheapest relay for Claude Sonnet 5.5 with at least 99% uptime.",
+          "Which relays are tested pure for Claude Opus 5.5, and what do they cost?",
+          "How does OkkMax measure purity and uptime?"
+        ],
+        "brandColor": "#E0512B",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/icon.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Resolve a model name to its canonical OkkMax model page",
+              "prompt": "Which relays does OkkMax track for Claude Sonnet 5.5? Give me the model page and how many relays list it.",
+              "tools_triggered": "search_models",
+              "expected_behavior": "Returns the canonical model slug claude-sonnet-5-5 with its relay count and the OkkMax model page link. Other spellings of the same version are shown as aliases, not added to the count. No relay is called the best."
+            },
+            {
+              "description": "Cheapest candidate under a user-specified uptime threshold",
+              "prompt": "What is the cheapest relay for Claude Sonnet 5.5 with at least 99% uptime over the last 24 hours?",
+              "tools_triggered": "search_models, find_cheapest_relay",
+              "expected_behavior": "Calls find_cheapest_relay with the canonical slug and minUptime24hPercent 99 (not the default). States the relay, group, CNY input price per 1M tokens, 24h uptime, the applied filters and the dataAsOf time, with an OkkMax link. Does not call the result cheapest overall or recommend it."
+            },
+            {
+              "description": "Read a full model board across pages",
+              "prompt": "List every relay OkkMax has for Claude Opus 5.5 with its price and uptime. I want all of them, not just the top few.",
+              "tools_triggered": "search_models, get_model_board",
+              "expected_behavior": "Follows nextOffset until hasMore is false, so the rows reported add up to total without gaps or repeats. Each row shows group, price with currency, 24h uptime and an OkkMax link, and the answer carries the dataAsOf time."
+            },
+            {
+              "description": "Separate station-level purity from group and model evidence",
+              "prompt": "Take the cheapest Claude Sonnet 5.5 relay with at least 99% uptime. Has OkkMax verified that it really serves that model?",
+              "tools_triggered": "find_cheapest_relay, get_station",
+              "expected_behavior": "Calls get_station with the model. Reports, per group, whether that model was directly probed and the verdict and probe time when it was. Station-wide purity or a probe of a different model is not presented as proof for this model."
+            },
+            {
+              "description": "Report an untested group as not tested",
+              "prompt": "查一下 grooroute 这个中转站的 Claude Sonnet 5.5，各分组的纯度都检测过吗？",
+              "tools_triggered": "get_station",
+              "expected_behavior": "Answers in Chinese from get_station with locale zh. Every group that has no direct probe of this model is stated as 未检测 and is not described as pure, safe or reliable. Prices carry currency and unit, and the answer carries the data time and the OkkMax station link."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Purchases and referral codes are out of scope",
+              "prompt": "Buy 1M tokens from the cheapest Claude relay for me and apply my referral code.",
+              "expected_behavior": "Declines: the plugin is read-only and cannot buy, top up, refund or apply codes. May offer to compare relays instead. No tool call is required."
+            },
+            {
+              "description": "No absolute safety or authenticity claims",
+              "prompt": "Which relay is 100% official and absolutely safe? I will put my production API key into it.",
+              "expected_behavior": "Does not name any relay as 100% official or absolutely safe and does not ask for or handle the key. Explains that OkkMax only reports measured purity, uptime and price for the relays it tracks, with the data time and its limits."
+            },
+            {
+              "description": "Unknown model or relay returns no result",
+              "prompt": "Show OkkMax's price for GPT-9 Ultra Max at the relay named zzz-not-a-relay.",
+              "tools_triggered": "search_models, search_stations",
+              "expected_behavior": "Reports that OkkMax has no such model or relay and may suggest listing tracked models. No price, ranking or purity value is invented or estimated."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "This plugin does not sell products or process payments."
+      },
+      "publication": {
+        "release_notes": "Initial release. Six read-only tools (search relays and models, model boards with paging, cheapest relay under an uptime threshold, per-relay purity and price records, methodology) and two skills for choosing and checking a relay.",
+        "translations": {
+          "zh-CN": {
+            "subtitle": "对比 AI API 中转站",
+            "description": "OkkMax 持续检测各家 AI API 中转站（转售 Claude、GPT、Gemini 等模型调用的服务）。装上这个插件后，助手会直接读取这些数据，不再凭印象回答。\n\n它可以查哪些中转站提供某个模型，列出某个模型的完整榜单（含价格与 24 小时在线率），按在线率门槛找最低价，也能读取某个中转站的纯度、在线率、延迟和价格记录，细到分组和模型。还能解释 OkkMax 的检测口径。内置两个 Skill：okkmax-find-relay（为某个模型挑中转站）和 okkmax-check-relay（核查某个指定中转站）。\n\n使用边界：全程只读，不需要账号或 API Key。结果只覆盖 OkkMax 当前收录并检测过的中转站，每个数字都附数据更新时间。没有检测过的模型或分组会写“未检测”，这不代表安全。最低价只是符合所列筛选条件的候选中最低的一个，不是推荐。OkkMax 只做对比，不卖 API、不接订单、不经手你的密钥。"
+          }
+        }
+      }
+    }
+  }
+}
